@@ -19,5 +19,19 @@ public class UsuarioService {
         return repository.findAll();
     }
 
-    public Optional
+    public void criarUsuario(){}
+
+    public void deletarUsuario{
+
+    }
+
+    public void alterarEmail(){}
+
+    public void alterarSenha(){}
+
+    public void alterarTelefone(){
+
+    }
+
+
 }
