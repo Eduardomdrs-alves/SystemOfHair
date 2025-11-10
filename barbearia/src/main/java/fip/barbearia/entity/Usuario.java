@@ -1,10 +1,15 @@
 package fip.barbearia.entity;
 
+import fip.barbearia.repository.UsuarioRepository;
 import fip.barbearia.util.Enums;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 @Entity
 public class Usuario {
@@ -17,7 +22,6 @@ public class Usuario {
     private String email;
     private String telefone;
     private String senha;
-    private Enums.TipoUsuario tipo;
 
     public long getId() {
         return id;
@@ -59,11 +63,4 @@ public class Usuario {
         this.senha = senha;
     }
 
-    public Enums.TipoUsuario getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(Enums.TipoUsuario tipo) {
-        this.tipo = tipo;
-    }
 }

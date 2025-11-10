@@ -5,4 +5,8 @@ public class Enums {
     public static enum TipoUsuario{
         USUARIO,FUNCIONARIO,ADM;
     }
+
+    public static enum HorariosDisponiveis {
+
+    }
 }

@@ -19,5 +19,9 @@ public class UsuarioService {
         return repository.findAll();
     }
 
-    public Optional
+    public void adicionarUsuario(String nome, String telefone){
+        Usuario u = new Usuario();
+        repository.save(u);
+    }
+
 }
