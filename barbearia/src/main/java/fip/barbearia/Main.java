@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan
-public class BarbeariaApplication {
+public class Main {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BarbeariaApplication.class, args);
+		SpringApplication.run(Main.class, args);
 	}
 
 }
