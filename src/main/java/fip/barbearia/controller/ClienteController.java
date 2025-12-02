@@ -2,6 +2,7 @@ package fip.barbearia.controller;
 
 import fip.barbearia.entity.*;
 import fip.barbearia.repository.*;
+import fip.barbearia.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,32 +21,30 @@ import java.util.Optional;
 @RequestMapping("/api/clientes")
 public class ClienteController {
 
-    @Autowired
-    private ClienteRepository repo;
+    private final ClienteService clienteService = new ClienteService();
 
     @PostMapping
-    public Cliente criarCliente(@RequestBody Cliente cliente){
-        // Método em português: criarConta
-        return repo.save(cliente);
+    public Cliente criarCliente(@RequestBody Cliente cliente) {
+        return clienteService.saveCliente(cliente);
     }
 
     @GetMapping
-    public List<Cliente> listarClientes(){ return repo.findAll(); }
+    public List<Cliente> listarClientes() {
+        return clienteService.getAllClientes();
+    }
 
     @GetMapping("/{id}")
-    public Optional<Cliente> obterCliente(@PathVariable Long id){ return repo.findById(id); }
+    public Optional<Cliente> obterCliente(@PathVariable Long id) {
+        return Optional.ofNullable(clienteService.getClienteById(id));
+    }
 
     @PutMapping("/{id}")
-    public Cliente editarCliente(@PathVariable Long id, @RequestBody Cliente dados){
-        Cliente c = repo.findById(id).orElseThrow();
-        c.setNome(dados.getNome());
-        c.setTelefone(dados.getTelefone());
-        c.setEmail(dados.getEmail());
-        // senha só altera se fornecida
-        if (dados.getSenha() != null && !dados.getSenha().isEmpty()) c.setSenha(dados.getSenha());
-        return repo.save(c);
+    public Cliente editarCliente(@PathVariable Long id, @RequestBody Cliente dados) {
+        return clienteService.updateCliente(id, dados);
     }
 
     @DeleteMapping("/{id}")
-    public void deletarCliente(@PathVariable Long id){ repo.deleteById(id); }
+    public void deletarCliente(@PathVariable Long id) {
+        clienteService.deleteCliente(id);
+    }
 }

@@ -3,6 +3,10 @@ package fip.barbearia.controller;
 import fip.barbearia.dto.AgendamentoRequest;
 import fip.barbearia.entity.*;
 import fip.barbearia.repository.*;
+import fip.barbearia.service.AgendamentoService;
+import fip.barbearia.service.BarbeiroService;
+import fip.barbearia.service.ClienteService;
+import fip.barbearia.service.ServicoService;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -20,83 +24,46 @@ import java.util.List;
 @RequestMapping("/api/agendamentos")
 public class AgendamentoController {
 
-    private final AgendamentoRepository agendamentoRepository;
-    private final ClienteRepository clienteRepository;
-    private final BarbeiroRepository barbeiroRepository;
-    private final ServicoRepository servicoRepository;
-
-    public AgendamentoController(
-            AgendamentoRepository agendamentoRepository,
-            ClienteRepository clienteRepository,
-            BarbeiroRepository barbeiroRepository,
-            ServicoRepository servicoRepository) {
-        this.agendamentoRepository = agendamentoRepository;
-        this.clienteRepository = clienteRepository;
-        this.barbeiroRepository = barbeiroRepository;
-        this.servicoRepository = servicoRepository;
-    }
+    private final AgendamentoService agendamentoService = new AgendamentoService();
 
     // Agendar serviço
     @PostMapping("/agendar")
     public Agendamento agendar(@RequestBody AgendamentoRequest req) {
+        Cliente cliente = new ClienteService().getClienteById(req.getClienteId());
+        Barbeiro barbeiro = new BarbeiroService().getBarbeiroById(req.getBarbeiroId());
+        Servico servico = new ServicoService().getServicoById(req.getServicoId());
 
-        Cliente cliente = clienteRepository.findById(req.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-
-        Barbeiro barbeiro = barbeiroRepository.findById(req.getBarbeiroId())
-                .orElseThrow(() -> new RuntimeException("Barbeiro não encontrado"));
-
-        Servico servico = servicoRepository.findById(req.getServicoId())
-                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
-
-        Agendamento agendamento = new Agendamento(
-                req.getDataHora(),
-                cliente,
-                barbeiro,
-                servico
-        );
-
-        return agendamentoRepository.save(agendamento);
+        return agendamentoService.criar(cliente.getId(), barbeiro.getId(), servico.getId(), req.getDataHora());
     }
 
     //Listar todos agendamentos
     @GetMapping
     public List<Agendamento> listarTodos() {
-        return agendamentoRepository.findAll();
+        return agendamentoService.listar();
     }
 
     // Agenda do barbeiro
     @GetMapping("/barbeiro/{id}")
     public List<Agendamento> listarPorBarbeiro(@PathVariable Long id) {
-        return agendamentoRepository.findByBarbeiroId(id);
+        return agendamentoService.listarPorBarbeiro(id);
     }
 
     // Agendamentos do cliente
     @GetMapping("/cliente/{id}")
     public List<Agendamento> listarPorCliente(@PathVariable Long id) {
-        return agendamentoRepository.findByClienteId(id);
+        return agendamentoService.listarPorCliente(id);
     }
 
     // Cancelar agendamento
     @PostMapping("/{id}/cancelar")
     public Agendamento cancelar(@PathVariable Long id) {
-
-        Agendamento ag = agendamentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
-
-        ag.cancelar();
-        return agendamentoRepository.save(ag);
+        return agendamentoService.cancelar(id);
     }
 
     // Reagendar
     @PostMapping("/{id}/reagendar")
     public Agendamento reagendar(@PathVariable Long id,
                                  @RequestBody LocalDateTime novaData) {
-
-        Agendamento ag = agendamentoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
-
-        ag.reagendar(novaData);
-        return agendamentoRepository.save(ag);
+        return agendamentoService.reagendar(id, novaData);
     }
 }

@@ -2,6 +2,7 @@ package fip.barbearia.controller;
 
 import fip.barbearia.entity.*;
 import fip.barbearia.repository.*;
+import fip.barbearia.service.BarbeiroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,15 +19,20 @@ import java.util.Optional;
 @RequestMapping("/api/barbeiros")
 public class BarbeiroController {
 
-    @Autowired
-    private BarbeiroRepository repo;
+    private final BarbeiroService barbeiroService = new BarbeiroService();
 
     @PostMapping
-    public Barbeiro criarBarbeiro(@RequestBody Barbeiro b){ return repo.save(b); }
+    public Barbeiro criarBarbeiro(@RequestBody Barbeiro b) {
+        return barbeiroService.saveBarbeiro(b);
+    }
 
     @GetMapping
-    public List<Barbeiro> listar(){ return repo.findAll(); }
+    public List<Barbeiro> listar() {
+        return barbeiroService.getAllBarbeiro();
+    }
 
     @GetMapping("/{id}")
-    public Optional<Barbeiro> obter(@PathVariable Long id){ return repo.findById(id); }
+    public Optional<Barbeiro> obter(@PathVariable Long id) {
+        return Optional.ofNullable(barbeiroService.getBarbeiroById(id));
+    }
 }
