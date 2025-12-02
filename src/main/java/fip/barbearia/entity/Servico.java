@@ -3,6 +3,7 @@ package fip.barbearia.entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "Servico")
 public class Servico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

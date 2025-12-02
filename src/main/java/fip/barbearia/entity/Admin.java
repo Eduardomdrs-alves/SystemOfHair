@@ -3,6 +3,7 @@ package fip.barbearia.entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "Admin")
 public class Admin extends Usuario {
     public Admin() {
     }

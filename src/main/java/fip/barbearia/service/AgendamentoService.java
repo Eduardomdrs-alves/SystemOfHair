@@ -1,86 +1,80 @@
 package fip.barbearia.service;
 
-import fip.barbearia.entity.Agendamento;
-import fip.barbearia.repository.AgendamentoRepository;
+import fip.barbearia.entity.*;
+import fip.barbearia.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AgendamentoService {
 
-    @Autowired
-    private AgendamentoRepository agendamentoRepository;
+    @Autowired private AgendamentoRepository agendamentoRepository;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private BarbeiroRepository barbeiroRepository;
+    @Autowired private ServicoRepository servicoRepository;
 
-    // Criar agendamento
-    public Agendamento saveAgendamento(Agendamento agendamento) {
-        return agendamentoRepository.save(agendamento);
+    public Agendamento criar(Long clienteId, Long barbeiroId, Long servicoId, LocalDateTime dataHora) {
+
+        Cliente cliente = clienteRepository.findById(clienteId).orElseThrow();
+        Barbeiro barbeiro = barbeiroRepository.findById(barbeiroId).orElseThrow();
+        Servico servico = servicoRepository.findById(servicoId).orElseThrow();
+
+        // regra de conflito
+        boolean ocupado = barbeiro.getAgendamentos().stream()
+                .anyMatch(a -> a.getDataHora().equals(dataHora));
+
+        if (ocupado) {
+            throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
+        }
+
+        Agendamento ag = new Agendamento(dataHora, cliente, barbeiro, servico);
+
+        // adiciona na lista do barbeiro
+        barbeiro.getAgendamentos().add(ag);
+
+        return agendamentoRepository.save(ag);
     }
 
-    // Buscar agendamento por ID
-    public Agendamento getAgendamentoById(Long id) {
-        Optional<Agendamento> agendamento = agendamentoRepository.findById(id);
-        return agendamento.orElse(null);
-    }
-
-    // Listar todos
-    public List<Agendamento> getAllAgendamentos() {
+    public List<Agendamento> listar() {
         return agendamentoRepository.findAll();
     }
 
-    // Deletar por ID
-    public void deleteAgendamento(Long id) {
-        agendamentoRepository.deleteById(id);
+    public List<Agendamento> listarPorCliente(Long clienteId) {
+        return agendamentoRepository.findByClienteId(clienteId);
     }
 
-    // Atualizar agendamento
-    public Agendamento updateAgendamento(Long id, Agendamento detalhes) {
-
-        Optional<Agendamento> optional = agendamentoRepository.findById(id);
-
-        if (optional.isPresent()) {
-            Agendamento existente = optional.get();
-
-            existente.setDataHora(detalhes.getDataHora());
-            existente.setStatus(detalhes.getStatus());
-            existente.setCliente(detalhes.getCliente());
-            existente.setBarbeiro(detalhes.getBarbeiro());
-            existente.setServico(detalhes.getServico());
-
-            return agendamentoRepository.save(existente);
-        }
-
-        return null;
+    public List<Agendamento> listarPorBarbeiro(Long barbeiroId) {
+        return agendamentoRepository.findByBarbeiroId(barbeiroId);
     }
 
-    // Métodos específicos do domínio (opcionais)
     public Agendamento confirmar(Long id) {
-        Agendamento ag = getAgendamentoById(id);
-        if (ag != null) {
-            ag.confirmar();
-            return agendamentoRepository.save(ag);
-        }
-        return null;
+        Agendamento ag = agendamentoRepository.findById(id).orElseThrow();
+        ag.confirmar();
+        return agendamentoRepository.save(ag);
     }
 
     public Agendamento reagendar(Long id, LocalDateTime novaData) {
-        Agendamento ag = getAgendamentoById(id);
-        if (ag != null) {
-            ag.reagendar(novaData);
-            return agendamentoRepository.save(ag);
+        Agendamento ag = agendamentoRepository.findById(id).orElseThrow();
+
+        // regra de conflito
+        if (ag.getBarbeiro().verificarAgenda(novaData)) {
+            throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
         }
-        return null;
+
+        ag.reagendar(novaData);
+        return agendamentoRepository.save(ag);
     }
 
     public Agendamento cancelar(Long id) {
-        Agendamento ag = getAgendamentoById(id);
-        if (ag != null) {
-            ag.cancelar();
-            return agendamentoRepository.save(ag);
-        }
-        return null;
+        Agendamento ag = agendamentoRepository.findById(id).orElseThrow();
+        ag.cancelar();
+        return agendamentoRepository.save(ag);
+    }
+
+    public void deletar(Long id) {
+        agendamentoRepository.deleteById(id);
     }
 }
