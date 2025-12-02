@@ -1,9 +1,11 @@
 package fip.barbearia.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "Agendamento")
 public class Agendamento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

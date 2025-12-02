@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "Barbeiro")
 public class Barbeiro extends Usuario {
     @OneToMany(mappedBy = "barbeiro", cascade = CascadeType.ALL)
     private List<Agendamento> agendamentos = new ArrayList<>();
