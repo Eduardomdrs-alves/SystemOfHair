@@ -1,11 +1,8 @@
 package fip.barbearia.entity;
 
-import jakarta.persistence.Table;
-
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Servico")
 public class Servico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,4 +42,3 @@ public class Servico {
         this.preco = preco;
     }
 }
-

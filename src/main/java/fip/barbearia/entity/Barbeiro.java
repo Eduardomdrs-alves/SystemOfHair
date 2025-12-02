@@ -1,13 +1,10 @@
 package fip.barbearia.entity;
 
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ArrayList;
 
 @Entity
-@Table(name = "Barbearia")
 public class Barbeiro extends Usuario {
     @OneToMany(mappedBy = "barbeiro", cascade = CascadeType.ALL)
     private List<Agendamento> agendamentos = new ArrayList<>();

@@ -3,7 +3,6 @@ package fip.barbearia.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "Cliente")
 public class Cliente extends Usuario {
     // Construtor padrão
     public Cliente() {

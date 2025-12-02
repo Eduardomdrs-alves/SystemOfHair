@@ -1,8 +1,9 @@
 package fip.barbearia.repository;
 
-import fip.barbearia.entity.Cliente;
+import fip.barbearia.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
 
-public interface ClienteRepository extends JpaRepository<Cliente, Long>{
-
+public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+    Optional<Cliente> findByEmail(String email);
 }
