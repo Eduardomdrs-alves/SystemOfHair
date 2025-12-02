@@ -1,8 +1,8 @@
 package fip.barbearia.controller;
 
+import fip.barbearia.dto.AgendamentoRequest;
 import fip.barbearia.entity.*;
 import fip.barbearia.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -20,67 +20,83 @@ import java.util.List;
 @RequestMapping("/api/agendamentos")
 public class AgendamentoController {
 
-    @Autowired private AgendamentoRepository agRepo;
-    @Autowired private ClienteRepository clienteRepo;
-    @Autowired private BarbeiroRepository barbeiroRepo;
-    @Autowired private ServicoRepository servicoRepo;
+    private final AgendamentoRepository agendamentoRepository;
+    private final ClienteRepository clienteRepository;
+    private final BarbeiroRepository barbeiroRepository;
+    private final ServicoRepository servicoRepository;
 
-    @PostMapping
-    public Agendamento criarAgendamento(@RequestBody AgendamentoDTO dto){
-        Cliente cliente = clienteRepo.findById(dto.getClienteId()).orElseThrow();
-        Barbeiro barbeiro = barbeiroRepo.findById(dto.getBarbeiroId()).orElseThrow();
-        Servico servico = servicoRepo.findById(dto.getServicoId()).orElseThrow();
-
-        Agendamento a = new Agendamento(dto.getDataHora(), cliente, barbeiro, servico);
-        // adiciona ao barbeiro
-        barbeiro.getAgendamentos().add(a);
-        return agRepo.save(a);
+    public AgendamentoController(
+            AgendamentoRepository agendamentoRepository,
+            ClienteRepository clienteRepository,
+            BarbeiroRepository barbeiroRepository,
+            ServicoRepository servicoRepository) {
+        this.agendamentoRepository = agendamentoRepository;
+        this.clienteRepository = clienteRepository;
+        this.barbeiroRepository = barbeiroRepository;
+        this.servicoRepository = servicoRepository;
     }
 
+    // Agendar serviço
+    @PostMapping("/agendar")
+    public Agendamento agendar(@RequestBody AgendamentoRequest req) {
+
+        Cliente cliente = clienteRepository.findById(req.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        Barbeiro barbeiro = barbeiroRepository.findById(req.getBarbeiroId())
+                .orElseThrow(() -> new RuntimeException("Barbeiro não encontrado"));
+
+        Servico servico = servicoRepository.findById(req.getServicoId())
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+
+        Agendamento agendamento = new Agendamento(
+                req.getDataHora(),
+                cliente,
+                barbeiro,
+                servico
+        );
+
+        return agendamentoRepository.save(agendamento);
+    }
+
+    //Listar todos agendamentos
     @GetMapping
-    public List<Agendamento> listar(){ return agRepo.findAll(); }
-
-    @PutMapping("/{id}/confirmar")
-    public Agendamento confirmar(@PathVariable Long id){
-        Agendamento a = agRepo.findById(id).orElseThrow();
-        a.confirmar();
-        return agRepo.save(a);
+    public List<Agendamento> listarTodos() {
+        return agendamentoRepository.findAll();
     }
 
-    @PutMapping("/{id}/reagendar")
-    public Agendamento reagendar(@PathVariable Long id, @RequestBody ReagendarDTO dto){
-        Agendamento a = agRepo.findById(id).orElseThrow();
-        a.reagendar(dto.getDataHora());
-        return agRepo.save(a);
+    // Agenda do barbeiro
+    @GetMapping("/barbeiro/{id}")
+    public List<Agendamento> listarPorBarbeiro(@PathVariable Long id) {
+        return agendamentoRepository.findByBarbeiroId(id);
     }
 
-    @PutMapping("/{id}/cancelar")
-    public Agendamento cancelar(@PathVariable Long id){
-        Agendamento a = agRepo.findById(id).orElseThrow();
-        a.cancelar();
-        return agRepo.save(a);
+    // Agendamentos do cliente
+    @GetMapping("/cliente/{id}")
+    public List<Agendamento> listarPorCliente(@PathVariable Long id) {
+        return agendamentoRepository.findByClienteId(id);
     }
 
-    // DTOs locais para simplificar payloads
-    public static class AgendamentoDTO {
-        private Long clienteId;
-        private Long barbeiroId;
-        private Long servicoId;
-        private LocalDateTime dataHora;
-        // getters e setters
-        public Long getClienteId(){return clienteId;}
-        public void setClienteId(Long clienteId){this.clienteId = clienteId;}
-        public Long getBarbeiroId(){return barbeiroId;}
-        public void setBarbeiroId(Long barbeiroId){this.barbeiroId = barbeiroId;}
-        public Long getServicoId(){return servicoId;}
-        public void setServicoId(Long servicoId){this.servicoId = servicoId;}
-        public LocalDateTime getDataHora(){return dataHora;}
-        public void setDataHora(LocalDateTime dataHora){this.dataHora = dataHora;}
+    // Cancelar agendamento
+    @PostMapping("/{id}/cancelar")
+    public Agendamento cancelar(@PathVariable Long id) {
+
+        Agendamento ag = agendamentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+
+        ag.cancelar();
+        return agendamentoRepository.save(ag);
     }
 
-    public static class ReagendarDTO {
-        private LocalDateTime dataHora;
-        public LocalDateTime getDataHora(){return dataHora;}
-        public void setDataHora(LocalDateTime dataHora){this.dataHora = dataHora;}
+    // Reagendar
+    @PostMapping("/{id}/reagendar")
+    public Agendamento reagendar(@PathVariable Long id,
+                                 @RequestBody LocalDateTime novaData) {
+
+        Agendamento ag = agendamentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado"));
+
+        ag.reagendar(novaData);
+        return agendamentoRepository.save(ag);
     }
 }

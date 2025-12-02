@@ -3,4 +3,10 @@ package fip.barbearia.repository;
 import fip.barbearia.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {}
+import java.util.List;
+
+public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
+
+    List<Agendamento> findByBarbeiroId(Long barbeiroId);
+    List<Agendamento> findByClienteId(Long clienteId);
+}

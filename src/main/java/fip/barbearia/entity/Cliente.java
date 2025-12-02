@@ -8,10 +8,27 @@ public class Cliente extends Usuario {
     public Cliente() {
     }
 
-    public Cliente(String nome, String email, String telefone, String senha) {
+    private Perfil perfil;
+
+ ;   public Cliente(String nome, String email, String telefone, String senha) {
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
         this.senha = senha;
+    }
+
+    public Perfil getPerfil() {
+        return perfil;
+    }
+
+    public void setPerfil(Perfil perfil) {
+        this.perfil = perfil;
+    }
+
+
+    public enum Perfil {
+        CLIENTE,
+        FUNCIONARIO,
+        ADMIN
     }
 }

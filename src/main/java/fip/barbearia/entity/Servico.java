@@ -9,6 +9,7 @@ public class Servico {
     private Long id;
     private String nome;
     private double preco;
+    private int duracao;
 
     public Servico() {
     }
@@ -40,5 +41,13 @@ public class Servico {
 
     public void setPreco(double preco) {
         this.preco = preco;
+    }
+
+    public int getDuracao() {
+        return duracao;
+    }
+
+    public void setDuracao(int duracao) {
+        this.duracao = duracao;
     }
 }
