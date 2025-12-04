@@ -1,9 +1,19 @@
-import Link from "next/link"
-import { Star, MapPin, Phone, Clock, Users } from "lucide-react"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
+"use client";
+
+import Link from "next/link";
+import { Star, MapPin, Phone, Clock, Users } from "lucide-react";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [isLogged, setIsLogged] = useState(false);
+
+  useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    setIsLogged(!!role);
+  }, []);
+
   const reviews = [
     {
       id: 1,
@@ -26,7 +36,7 @@ export default function Home() {
       text: "Ótimo ambiente, profissionais atenciosos. Super recomendo!",
       date: "2 semanas atrás",
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -35,13 +45,16 @@ export default function Home() {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary to-secondary text-primary-foreground py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">Barbearia</h1>
-          <p className="text-xl md:text-2xl mb-8 opacity-95">A melhor barbearia da região</p>
+          <h1 className="text-5xl md:text-6xl font-bold mb-4">System of Hair</h1>
+          <p className="text-xl md:text-2xl mb-8 opacity-95">
+            A melhor barbearia da região
+          </p>
+
           <Link
-            href="/reservas"
+            href={isLogged ? "/reservas" : "/login"}
             className="inline-block bg-accent text-accent-foreground px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
           >
-            Agendar Agora
+            {isLogged ? "Agendar Agora" : "Registre-se Agora"}
           </Link>
         </div>
       </section>
@@ -54,11 +67,13 @@ export default function Home() {
             <h3 className="font-semibold mb-2">Localização</h3>
             <p className="text-muted-foreground">Rua do Prado, 17 - Patos, SP</p>
           </div>
+
           <div className="text-center">
             <Phone className="w-10 h-10 text-primary mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Contato</h3>
             <p className="text-muted-foreground">(11) 98765-4321</p>
           </div>
+
           <div className="text-center">
             <Clock className="w-10 h-10 text-primary mx-auto mb-3" />
             <h3 className="font-semibold mb-2">Horário</h3>
@@ -98,17 +113,20 @@ export default function Home() {
       {/* CTA Section */}
       <section className="bg-secondary text-secondary-foreground py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Pronto para seu novo visual?</h2>
+          <h2 className="text-3xl font-bold mb-6">
+            Pronto para seu novo visual?
+          </h2>
+
           <Link
-            href="/reservas"
+            href={isLogged ? "/reservas" : "/login"}
             className="inline-block bg-accent text-accent-foreground px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-shadow"
           >
-            Reserve seu Corte
+            {isLogged ? "Reserve seu Corte" : "Crie sua Conta"}
           </Link>
         </div>
       </section>
 
       <Footer />
     </div>
-  )
+  );
 }

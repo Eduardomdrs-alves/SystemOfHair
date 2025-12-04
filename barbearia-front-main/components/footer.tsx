@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="bg-secondary text-secondary-foreground mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
-          <h3 className="font-bold text-lg mb-4">Barbearia</h3>
+          <h3 className="font-bold text-lg mb-4">System of Hair</h3>
           <p className="text-secondary-foreground/80">A melhor barbearia para você e sua família.</p>
         </div>
 
@@ -38,14 +38,14 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              <span>contato@primecuts.com</span>
+              <span>contato@gmail.com</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="border-t border-secondary-foreground/10 mt-8 pt-8 text-center pb-4 text-secondary-foreground/60">
-        <p>&copy; 2025 Barbearia. Todos os direitos reservados.</p>
+        <p>&copy; 2025 System of Hair. Todos os direitos reservados.</p>
       </div>
     </footer>
   )

@@ -10,8 +10,8 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 const _barlow = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 
 export const metadata: Metadata = {
-  title: "Prime Cuts Barbearia - Reservas Online",
-  description: "Reserve seu corte online na Prime Cuts Barbearia. Escolha o serviço, barbeiro e horário que preferir.",
+  title: "System of Hair",
+  description: "Reserve seu corte online na System of Hair. Escolha o serviço, barbeiro e horário que preferir.",
   generator: "v0.app",
   icons: {
     icon: [
