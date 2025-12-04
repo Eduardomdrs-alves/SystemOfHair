@@ -19,8 +19,15 @@ public class AuthService {
     @Autowired private ServicoRepository servicoRepository;
 
     public Cliente criarUsuario(Cliente cliente){
-        clienteRepository.save(cliente);
-        return cliente;
+        try {
+            // O save pode falhar por problemas no banco,
+            // como conexão ou violação de integridade.
+            clienteRepository.save(cliente);
+            return cliente;
+        } catch (Exception e) {
+            System.out.println("Erro ao criar usuário: " + e.getMessage());
+            return null; // retorna null para indicar falha na criação
+        }
     }
 
     public Object login(String email, String senha){
@@ -42,7 +49,7 @@ public class AuthService {
             return admin.get();
         }
 
-        throw new RuntimeException("Email ou senha incorretos");
+        throw new RuntimeException("Email ou senha incorretos"); // Se chegar aqui, nenhum login funcionou
     }
 
 }
