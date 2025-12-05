@@ -21,7 +21,8 @@ import java.util.Optional;
 @RequestMapping("/api/clientes")
 public class ClienteController {
 
-    private final ClienteService clienteService = new ClienteService();
+    @Autowired
+    private ClienteService clienteService;
 
     @PostMapping
     public Cliente criarCliente(@RequestBody Cliente cliente) {

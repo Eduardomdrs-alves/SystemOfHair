@@ -7,6 +7,7 @@ import fip.barbearia.service.AgendamentoService;
 import fip.barbearia.service.BarbeiroService;
 import fip.barbearia.service.ClienteService;
 import fip.barbearia.service.ServicoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -24,7 +25,8 @@ import java.util.List;
 @RequestMapping("/api/agendamentos")
 public class AgendamentoController {
 
-    private final AgendamentoService agendamentoService = new AgendamentoService();
+    @Autowired
+    private AgendamentoService agendamentoService;
 
     // Agendar serviço
     @PostMapping("/agendar")

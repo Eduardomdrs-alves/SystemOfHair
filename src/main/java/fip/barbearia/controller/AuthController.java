@@ -3,6 +3,7 @@ package fip.barbearia.controller;
 import fip.barbearia.entity.*;
 import fip.barbearia.repository.*;
 import fip.barbearia.service.AuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -12,7 +13,8 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService = new AuthService();
+    @Autowired
+    private AuthService authService;
 
     // REGISTRO (SÓ CLIENTE)
     @PostMapping("/registrar")

@@ -19,7 +19,8 @@ import java.util.Optional;
 @RequestMapping("/api/barbeiros")
 public class BarbeiroController {
 
-    private final BarbeiroService barbeiroService = new BarbeiroService();
+    @Autowired
+    private BarbeiroService barbeiroService;
 
     @PostMapping
     public Barbeiro criarBarbeiro(@RequestBody Barbeiro b) {

@@ -17,7 +17,8 @@ import java.util.List;
 @RequestMapping("/api/servicos")
 public class ServicoController {
 
-    private final ServicoService servicoService = new ServicoService();
+    @Autowired
+    private ServicoService servicoService;
 
     @PostMapping
     public Servico criar(@RequestBody Servico s) {
