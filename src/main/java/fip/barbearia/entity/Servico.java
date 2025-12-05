@@ -8,6 +8,7 @@ public class Servico {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nome;
     private double preco;
     private int duracao;
@@ -15,9 +16,10 @@ public class Servico {
     public Servico() {
     }
 
-    public Servico(String nome, double preco) {
+    public Servico(String nome, double preco, int duracao) {
         this.nome = nome;
         this.preco = preco;
+        this.duracao = duracao;
     }
 
     public Long getId() {

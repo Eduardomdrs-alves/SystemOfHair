@@ -8,35 +8,15 @@ public class AgendamentoRequest {
     private Long servicoId;
     private LocalDateTime dataHora;
 
-    public Long getClienteId() {
-        return clienteId;
-    }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
 
-    public void setClienteId(Long clienteId) {
-        this.clienteId = clienteId;
-    }
+    public Long getBarbeiroId() { return barbeiroId; }
+    public void setBarbeiroId(Long barbeiroId) { this.barbeiroId = barbeiroId; }
 
-    public Long getBarbeiroId() {
-        return barbeiroId;
-    }
+    public Long getServicoId() { return servicoId; }
+    public void setServicoId(Long servicoId) { this.servicoId = servicoId; }
 
-    public void setBarbeiroId(Long barbeiroId) {
-        this.barbeiroId = barbeiroId;
-    }
-
-    public Long getServicoId() {
-        return servicoId;
-    }
-
-    public void setServicoId(Long servicoId) {
-        this.servicoId = servicoId;
-    }
-
-    public LocalDateTime getDataHora() {
-        return dataHora;
-    }
-
-    public void setDataHora(LocalDateTime dataHora) {
-        this.dataHora = dataHora;
-    }
+    public LocalDateTime getDataHora() { return dataHora; }
+    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
 }

@@ -1,7 +1,13 @@
 package fip.barbearia.service;
 
-import fip.barbearia.entity.*;
-import fip.barbearia.repository.*;
+import fip.barbearia.entity.Agendamento;
+import fip.barbearia.entity.Barbeiro;
+import fip.barbearia.entity.Cliente;
+import fip.barbearia.entity.Servico;
+import fip.barbearia.repository.AgendamentoRepository;
+import fip.barbearia.repository.BarbeiroRepository;
+import fip.barbearia.repository.ClienteRepository;
+import fip.barbearia.repository.ServicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,24 +23,19 @@ public class AgendamentoService {
     @Autowired private ServicoRepository servicoRepository;
 
     public Agendamento criar(Long clienteId, Long barbeiroId, Long servicoId, LocalDateTime dataHora) {
-
         try {
-            // As buscas podem falhar caso o ID não exista ou o banco esteja indisponível
             Cliente cliente = clienteRepository.findById(clienteId).orElseThrow();
             Barbeiro barbeiro = barbeiroRepository.findById(barbeiroId).orElseThrow();
             Servico servico = servicoRepository.findById(servicoId).orElseThrow();
 
-            boolean ocupado = barbeiro.getAgendamentos().stream()
+            // Verificar disponibilidade
+            boolean ocupado = agendamentoRepository.findByBarbeiroId(barbeiroId)
+                    .stream()
                     .anyMatch(a -> a.getDataHora().equals(dataHora));
 
-            if (ocupado) {
-                throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
-            }
+            if (ocupado) throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
 
             Agendamento ag = new Agendamento(dataHora, cliente, barbeiro, servico);
-
-            barbeiro.getAgendamentos().add(ag);
-
             return agendamentoRepository.save(ag);
 
         } catch (Exception e) {
@@ -74,9 +75,7 @@ public class AgendamentoService {
         try {
             Agendamento ag = agendamentoRepository.findById(id).orElseThrow();
             ag.confirmar();
-
             return agendamentoRepository.save(ag);
-
         } catch (Exception e) {
             System.out.println("Erro ao confirmar agendamento: " + e.getMessage());
             return null;
@@ -87,12 +86,13 @@ public class AgendamentoService {
         try {
             Agendamento ag = agendamentoRepository.findById(id).orElseThrow();
 
-            if (ag.getBarbeiro().verificarAgenda(novaData)) {
-                throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
-            }
+            boolean ocupado = agendamentoRepository.findByBarbeiroId(ag.getBarbeiro().getId())
+                    .stream()
+                    .anyMatch(a -> a.getDataHora().equals(novaData));
+
+            if (ocupado) throw new RuntimeException("O barbeiro já possui agendamento nesse horário.");
 
             ag.reagendar(novaData);
-
             return agendamentoRepository.save(ag);
 
         } catch (Exception e) {
