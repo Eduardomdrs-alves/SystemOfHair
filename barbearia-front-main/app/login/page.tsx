@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LogIn, User, Shield, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { apiGet, apiPost } from "@/services/api";
 export default function LoginHub() {
   const router = useRouter();
 
@@ -19,55 +20,84 @@ export default function LoginHub() {
   const [admEmail, setAdmEmail] = useState("");
   const [admSenha, setAdmSenha] = useState("");
 
-  const funcionarioLogin = { email: "func@primecuts.com", senha: "123456" };
-  const adminLogin = { email: "admin@primecuts.com", senha: "admin123" };
+  const funcionarioLogin = { email: "func@gmail.com", senha: "123456" };
+  const adminLogin = { email: "admin@gmail.com", senha: "admin123" };
 
-  // -------------------------------------------------
-  // CARREGA OS DADOS SALVOS QUANDO O COMPONENTE INICIA
-  // -------------------------------------------------
-  useEffect(() => {
-    const savedClienteEmail = localStorage.getItem("clienteEmail");
-    const savedClienteNome = localStorage.getItem("clienteNome");
-    const savedFuncEmail = localStorage.getItem("funcEmail");
-    const savedAdmEmail = localStorage.getItem("admEmail");
+  const handleLoginCliente = async () => {
+    try {
+      if (!clienteEmail || !clienteSenha) {
+        alert("Preencha email e senha.");
+        return;
+      }
 
-    if (savedClienteEmail) setClienteEmail(savedClienteEmail);
-    if (savedClienteNome) setClienteNome(savedClienteNome);
-    if (savedFuncEmail) setFuncEmail(savedFuncEmail);
-    if (savedAdmEmail) setAdmEmail(savedAdmEmail);
-  }, []);
+      const res = await fetch(
+        `http://localhost:8080/api/auth/login?email=${encodeURIComponent(
+          clienteEmail
+        )}&senha=${encodeURIComponent(clienteSenha)}`,
+        { method: "POST" }
+      );
 
-  // -------------------------------------------------
-  // SALVA AUTOMATICAMENTE QUANDO O USUÁRIO DIGITA
-  // -------------------------------------------------
-  useEffect(() => {
-    localStorage.setItem("clienteEmail", clienteEmail);
-  }, [clienteEmail]);
+      if (!res.ok) {
+        const e = await res.text();
+        throw new Error(e);
+      }
 
-  useEffect(() => {
-    localStorage.setItem("clienteNome", clienteNome);
-  }, [clienteNome]);
+      const usuario = await res.json();
 
-  useEffect(() => {
-    localStorage.setItem("funcEmail", funcEmail);
-  }, [funcEmail]);
+      if (!usuario || !usuario.email) {
+        alert("Email ou senha inválidos.");
+        return;
+      }
 
-  useEffect(() => {
-    localStorage.setItem("admEmail", admEmail);
-  }, [admEmail]);
+      // Salva sessão
+      localStorage.setItem("userRole", "cliente");
+      localStorage.setItem("clienteEmail", usuario.email);
+      localStorage.setItem("clienteNome", usuario.nome);
+      localStorage.setItem("clienteId", usuario.id);
 
-  // -------------------------------------------------
-  // LOGIN / REGISTER
-  // -------------------------------------------------
-
-  const handleLoginCliente = () => {
-    localStorage.setItem("userRole", "cliente");
-    router.push("/");
+      router.push("/");
+    } catch (error: any) {
+      alert("Erro ao fazer login: " + error.message);
+    }
   };
 
-  const handleRegisterCliente = () => {
-    localStorage.setItem("userRole", "cliente");
-    router.push("/");
+  // -------------------------------------------------
+  // REGISTRO CLIENTE COM API
+  // -------------------------------------------------
+  const handleRegisterCliente = async () => {
+    try {
+      if (!clienteEmail || !clienteSenha || !clienteNome) {
+        alert("Preencha nome, email e senha.");
+        return;
+      }
+
+      const res = await fetch("http://localhost:8080/api/auth/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: clienteNome,
+          email: clienteEmail,
+          senha: clienteSenha,
+        }),
+      });
+
+      if (!res.ok) {
+        const e = await res.text();
+        throw new Error(e);
+      }
+
+      const cliente = await res.json();
+
+      // Salvar no localStorage
+      localStorage.setItem("userRole", "cliente");
+      localStorage.setItem("clienteEmail", cliente.email);
+      localStorage.setItem("clienteNome", cliente.nome);
+      localStorage.setItem("clienteId", cliente.id);
+
+      router.push("/");
+    } catch (error: any) {
+      alert("Erro ao registrar: " + error.message);
+    }
   };
 
   const handleLoginFuncionario = () => {
@@ -76,6 +106,7 @@ export default function LoginHub() {
       funcSenha === funcionarioLogin.senha
     ) {
       localStorage.setItem("userRole", "funcionario");
+      localStorage.setItem("funcEmail", funcEmail);
       router.push("/");
     } else {
       alert("Credenciais inválidas para funcionário.");
@@ -85,6 +116,7 @@ export default function LoginHub() {
   const handleLoginAdmin = () => {
     if (admEmail === adminLogin.email && admSenha === adminLogin.senha) {
       localStorage.setItem("userRole", "admin");
+      localStorage.setItem("admEmail", admEmail);
       router.push("/");
     } else {
       alert("Credenciais inválidas para administrador.");
@@ -115,7 +147,7 @@ export default function LoginHub() {
         {/* ------------------------------------------------------------- SELECT ------------------------------------------------------------- */}
         {mode === "select" && (
           <>
-            <h1 className="text-3xl font-bold mb-1">Prime Cuts</h1>
+            <h1 className="text-3xl font-bold mb-1">System of Hair</h1>
             <p className="text-muted-foreground mb-6">
               Faça login para continuar
             </p>
@@ -148,7 +180,7 @@ export default function LoginHub() {
             </div>
 
             <p className="text-xs text-muted-foreground mt-8">
-              Prime Cuts © 2025 • Sistema de Agendamento
+              System of Hair © 2025 • Sistema de Agendamento
             </p>
           </>
         )}
@@ -156,7 +188,7 @@ export default function LoginHub() {
         {/* ------------------------------------------------------------- LOGIN CLIENTE ------------------------------------------------------------- */}
         {mode === "cliente-login" && (
           <>
-            <h1 className="text-3xl font-bold mb-1">Prime Cuts</h1>
+            <h1 className="text-3xl font-bold mb-1">System of Hair</h1>
             <p className="text-muted-foreground mb-4">
               Faça login para continuar
             </p>
@@ -172,7 +204,6 @@ export default function LoginHub() {
               <label className="text-sm">Email</label>
               <input
                 type="email"
-                autoComplete="off"
                 className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100"
                 value={clienteEmail}
                 onChange={(e) => setClienteEmail(e.target.value)}
@@ -183,7 +214,6 @@ export default function LoginHub() {
               <label className="text-sm">Senha</label>
               <input
                 type="password"
-                autoComplete="off"
                 className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100"
                 value={clienteSenha}
                 onChange={(e) => setClienteSenha(e.target.value)}
@@ -225,7 +255,6 @@ export default function LoginHub() {
               <label className="text-sm">Nome</label>
               <input
                 type="text"
-                autoComplete="off"
                 className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100"
                 value={clienteNome}
                 onChange={(e) => setClienteNome(e.target.value)}
@@ -236,7 +265,6 @@ export default function LoginHub() {
               <label className="text-sm">Email</label>
               <input
                 type="email"
-                autoComplete="off"
                 className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100"
                 value={clienteEmail}
                 onChange={(e) => setClienteEmail(e.target.value)}
@@ -247,7 +275,6 @@ export default function LoginHub() {
               <label className="text-sm">Senha</label>
               <input
                 type="password"
-                autoComplete="off"
                 className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100"
                 value={clienteSenha}
                 onChange={(e) => setClienteSenha(e.target.value)}
@@ -276,14 +303,11 @@ export default function LoginHub() {
               ← Voltar
             </button>
 
-            <p className="text-sm font-semibold mb-2">
-              Email: func@primecuts.com
-            </p>
+            <p className="text-sm font-semibold mb-2">Email: func@gmail.com</p>
             <p className="text-sm font-semibold mb-4">Senha: 123456</p>
 
             <input
               type="email"
-              autoComplete="off"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 mb-3"
               value={funcEmail}
               onChange={(e) => setFuncEmail(e.target.value)}
@@ -291,7 +315,6 @@ export default function LoginHub() {
 
             <input
               type="password"
-              autoComplete="off"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 mb-6"
               value={funcSenha}
               onChange={(e) => setFuncSenha(e.target.value)}
@@ -319,14 +342,11 @@ export default function LoginHub() {
               ← Voltar
             </button>
 
-            <p className="text-sm font-semibold mb-2">
-              Email: admin@primecuts.com
-            </p>
+            <p className="text-sm font-semibold mb-2">Email: admin@gmail.com</p>
             <p className="text-sm font-semibold mb-4">Senha: admin123</p>
 
             <input
               type="email"
-              autoComplete="off"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 mb-3"
               value={admEmail}
               onChange={(e) => setAdmEmail(e.target.value)}
@@ -334,7 +354,6 @@ export default function LoginHub() {
 
             <input
               type="password"
-              autoComplete="off"
               className="w-full mt-1 px-4 py-2 rounded-lg bg-gray-100 mb-6"
               value={admSenha}
               onChange={(e) => setAdmSenha(e.target.value)}
@@ -342,7 +361,7 @@ export default function LoginHub() {
 
             <button
               onClick={handleLoginAdmin}
-              className="w-full py-3 bg-secondary text-black rounded-lg font-semibold"
+              className="w-full py-3 bg-secondary text-white rounded-lg font-semibold"
             >
               Entrar
             </button>

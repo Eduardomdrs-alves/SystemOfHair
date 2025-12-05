@@ -1,57 +1,256 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import { Plus, Trash2, Edit2, Save, X } from "lucide-react"
+import { useEffect, useState } from "react";
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { Plus, Trash2, Edit2, Save, X } from "lucide-react";
 
+// -------------------
+// Tipagens
+// -------------------
+interface Barbeiro {
+  id: number;
+  name: string;
+}
+
+interface Servico {
+  id: number;
+  name: string;
+  price: number;
+  duration: number; // minutos
+}
+
+// -------------------
+// Component
+// -------------------
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState("services")
-  const [services, setServices] = useState([
-    { id: 1, name: "Corte de Cabelo", price: 35.0, duration: 30 },
-    { id: 2, name: "Corte + Barba", price: 60.0, duration: 45 },
-    { id: 3, name: "Barba", price: 30.0, duration: 20 },
-  ])
+  const [activeTab, setActiveTab] = useState("services");
 
+  // -------------------
+  // Barbearia Info
+  // -------------------
   const [barbershopInfo, setBarbershopInfo] = useState({
-    name: "Prime Cuts",
-    phone: "(11) 98765-4321",
-    address: "Rua do Prado, 17 - Patos, SP",
-    email: "contato@primecuts.com",
-  })
+    name: "",
+    phone: "",
+    address: "",
+    email: "",
+  });
+  const [editingInfo, setEditingInfo] = useState(false);
 
-  const [editingService, setEditingService] = useState<(typeof services)[0] | null>(null)
-  const [newService, setNewService] = useState({ name: "", price: 0, duration: 0 })
-  const [editingInfo, setEditingInfo] = useState(false)
+  useEffect(() => {
+    const saved = localStorage.getItem("barbershopInfo");
+    if (saved) setBarbershopInfo(JSON.parse(saved));
+  }, []);
 
-  const handleAddService = () => {
-    if (newService.name && newService.price > 0 && newService.duration > 0) {
+  const handleUpdateInfo = () => {
+    localStorage.setItem("barbershopInfo", JSON.stringify(barbershopInfo));
+    setEditingInfo(false);
+  };
+
+  // -------------------
+  // Barbeiros CRUD (via API)
+  // -------------------
+  const [barbeiros, setBarbeiros] = useState<Barbeiro[]>([]);
+  const [newBarbeiroName, setNewBarbeiroName] = useState("");
+  const [editingBarbeiroId, setEditingBarbeiroId] = useState<number | null>(
+    null
+  );
+  const [editingBarbeiroName, setEditingBarbeiroName] = useState("");
+
+  // Buscar barbeiros da API
+  const fetchBarbeiros = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/barbeiros");
+      if (!res.ok) throw new Error("Erro ao buscar barbeiros");
+      const data = await res.json();
+      const mapped = data.map((b: any) => ({ id: b.id, name: b.nome }));
+      setBarbeiros(mapped);
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchBarbeiros();
+  }, []);
+
+  // Adicionar barbeiro
+  const handleAddBarbeiro = async () => {
+    if (!newBarbeiroName.trim()) return;
+    try {
+      const res = await fetch("http://localhost:8080/api/barbeiros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome: newBarbeiroName }),
+      });
+      if (!res.ok) throw new Error("Erro ao adicionar barbeiro");
+
+      const savedBarbeiro = await res.json();
+      setBarbeiros([
+        ...barbeiros,
+        { id: savedBarbeiro.id, name: savedBarbeiro.nome },
+      ]);
+      setNewBarbeiroName("");
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  // Atualizar barbeiro
+  const handleUpdateBarbeiro = async () => {
+    if (editingBarbeiroId === null || !editingBarbeiroName.trim()) return;
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/barbeiros/${editingBarbeiroId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome: editingBarbeiroName }),
+        }
+      );
+      if (!res.ok) throw new Error("Erro ao atualizar barbeiro");
+
+      const updatedBarbeiro = await res.json();
+      setBarbeiros(
+        barbeiros.map((b) =>
+          b.id === updatedBarbeiro.id ? { ...b, name: updatedBarbeiro.nome } : b
+        )
+      );
+      setEditingBarbeiroId(null);
+      setEditingBarbeiroName("");
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  // Deletar barbeiro
+  const handleDeleteBarbeiro = async (id: number) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/barbeiros/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Erro ao deletar barbeiro");
+      setBarbeiros(barbeiros.filter((b) => b.id !== id));
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  // -------------------
+  // Serviços CRUD (via API)
+  // -------------------
+  const [services, setServices] = useState<Servico[]>([]);
+  const [editingService, setEditingService] = useState<Servico | null>(null);
+  const [newService, setNewService] = useState({
+    name: "",
+    price: 0,
+    duration: 0,
+  });
+
+  // Buscar serviços da API
+  useEffect(() => {
+    fetch("http://localhost:8080/api/servicos")
+      .then((res) => res.json())
+      .then((data: any[]) => {
+        const mapped = data.map((s) => ({
+          id: s.id,
+          name: s.nome,
+          price: s.preco,
+          duration: s.duracao,
+        }));
+        setServices(mapped);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // Adicionar serviço
+  const handleAddService = async () => {
+    if (!newService.name || newService.price <= 0 || newService.duration <= 0)
+      return;
+
+    try {
+      const res = await fetch("http://localhost:8080/api/servicos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: newService.name,
+          preco: newService.price,
+          duracao: newService.duration,
+        }),
+      });
+      if (!res.ok) throw new Error("Erro ao adicionar serviço");
+
+      const savedService = await res.json();
       setServices([
         ...services,
         {
-          id: Math.max(...services.map((s) => s.id), 0) + 1,
-          ...newService,
+          id: savedService.id,
+          name: savedService.nome,
+          price: savedService.preco,
+          duration: savedService.duracao,
         },
-      ])
-      setNewService({ name: "", price: 0, duration: 0 })
+      ]);
+      setNewService({ name: "", price: 0, duration: 0 });
+    } catch (error: any) {
+      alert(error.message);
     }
-  }
+  };
 
-  const handleDeleteService = (id: number) => {
-    setServices(services.filter((s) => s.id !== id))
-  }
+  // Atualizar serviço
+  const handleUpdateService = async () => {
+    if (!editingService) return;
 
-  const handleUpdateService = () => {
-    if (editingService && editingService.name && editingService.price > 0) {
-      setServices(services.map((s) => (s.id === editingService.id ? editingService : s)))
-      setEditingService(null)
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/servicos/${editingService.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: editingService.name,
+            preco: editingService.price,
+            duracao: editingService.duration,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Erro ao atualizar serviço");
+
+      const updatedService = await res.json();
+      setServices(
+        services.map((s) =>
+          s.id === updatedService.id
+            ? {
+                id: updatedService.id,
+                name: updatedService.nome,
+                price: updatedService.preco,
+                duration: updatedService.duracao,
+              }
+            : s
+        )
+      );
+      setEditingService(null);
+    } catch (error: any) {
+      alert(error.message);
     }
-  }
+  };
 
-  const handleUpdateInfo = () => {
-    setEditingInfo(false)
-  }
+  // Deletar serviço
+  const handleDeleteService = async (id: number) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/servicos/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Erro ao deletar serviço");
 
+      setServices(services.filter((s) => s.id !== id));
+    } catch (error: any) {
+      alert(error.message);
+    }
+  };
+
+  // -------------------
+  // Render
+  // -------------------
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
@@ -72,6 +271,18 @@ export default function AdminPage() {
             >
               Serviços
             </button>
+
+            <button
+              onClick={() => setActiveTab("barbers")}
+              className={`px-6 py-3 font-semibold border-b-2 transition ${
+                activeTab === "barbers"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Barbeiros
+            </button>
+
             <button
               onClick={() => setActiveTab("info")}
               className={`px-6 py-3 font-semibold border-b-2 transition ${
@@ -84,17 +295,22 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Services Tab */}
+          {/* Serviços */}
           {activeTab === "services" && (
             <div className="space-y-6">
+              {/* Adicionar Serviço */}
               <div>
-                <h2 className="text-2xl font-semibold mb-4">Adicionar Novo Serviço</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Adicionar Novo Serviço
+                </h2>
                 <div className="bg-muted p-6 rounded-lg space-y-4">
                   <input
                     type="text"
                     placeholder="Nome do serviço"
                     value={newService.name}
-                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewService({ ...newService, name: e.target.value })
+                    }
                     className="w-full p-3 border border-border rounded-lg bg-background"
                   />
                   <div className="grid grid-cols-2 gap-4">
@@ -102,14 +318,24 @@ export default function AdminPage() {
                       type="number"
                       placeholder="Preço (R$)"
                       value={newService.price}
-                      onChange={(e) => setNewService({ ...newService, price: Number.parseFloat(e.target.value) })}
+                      onChange={(e) =>
+                        setNewService({
+                          ...newService,
+                          price: Number.parseFloat(e.target.value),
+                        })
+                      }
                       className="w-full p-3 border border-border rounded-lg bg-background"
                     />
                     <input
                       type="number"
                       placeholder="Duração (min)"
                       value={newService.duration}
-                      onChange={(e) => setNewService({ ...newService, duration: Number.parseInt(e.target.value) })}
+                      onChange={(e) =>
+                        setNewService({
+                          ...newService,
+                          duration: Number.parseInt(e.target.value),
+                        })
+                      }
                       className="w-full p-3 border border-border rounded-lg bg-background"
                     />
                   </div>
@@ -117,30 +343,43 @@ export default function AdminPage() {
                     onClick={handleAddService}
                     className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
                   >
-                    <Plus className="w-5 h-5" />
-                    Adicionar Serviço
+                    <Plus className="w-5 h-5" /> Adicionar Serviço
                   </button>
                 </div>
               </div>
 
+              {/* Serviços Cadastrados */}
               <div>
-                <h2 className="text-2xl font-semibold mb-4">Serviços Cadastrados</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Serviços Cadastrados
+                </h2>
                 <div className="space-y-3">
                   {services.map((service) => (
-                    <div key={service.id} className="bg-muted p-4 rounded-lg flex items-center justify-between">
+                    <div
+                      key={service.id}
+                      className="bg-muted p-4 rounded-lg flex items-center justify-between"
+                    >
                       {editingService?.id === service.id ? (
                         <div className="flex gap-3 flex-1">
                           <input
                             type="text"
                             value={editingService.name}
-                            onChange={(e) => setEditingService({ ...editingService, name: e.target.value })}
+                            onChange={(e) =>
+                              setEditingService({
+                                ...editingService,
+                                name: e.target.value,
+                              })
+                            }
                             className="flex-1 p-2 border border-border rounded bg-background"
                           />
                           <input
                             type="number"
                             value={editingService.price}
                             onChange={(e) =>
-                              setEditingService({ ...editingService, price: Number.parseFloat(e.target.value) })
+                              setEditingService({
+                                ...editingService,
+                                price: Number.parseFloat(e.target.value),
+                              })
                             }
                             className="w-24 p-2 border border-border rounded bg-background"
                           />
@@ -148,7 +387,10 @@ export default function AdminPage() {
                             type="number"
                             value={editingService.duration}
                             onChange={(e) =>
-                              setEditingService({ ...editingService, duration: Number.parseInt(e.target.value) })
+                              setEditingService({
+                                ...editingService,
+                                duration: Number.parseInt(e.target.value),
+                              })
                             }
                             className="w-24 p-2 border border-border rounded bg-background"
                           />
@@ -170,7 +412,8 @@ export default function AdminPage() {
                           <div className="flex-1">
                             <h3 className="font-semibold">{service.name}</h3>
                             <p className="text-sm text-muted-foreground">
-                              R$ {service.price.toFixed(2)} • {service.duration} min
+                              R$ {service.price?.toFixed(2) ?? "0.00"} •{" "}
+                              {service.duration ?? 0} min
                             </p>
                           </div>
                           <div className="flex gap-2">
@@ -196,89 +439,170 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Info Tab */}
+          {/* Barbeiros */}
+          {activeTab === "barbers" && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold mb-4">
+                Adicionar Barbeiro
+              </h2>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Nome do barbeiro"
+                  value={newBarbeiroName}
+                  onChange={(e) => setNewBarbeiroName(e.target.value)}
+                  className="flex-1 p-3 border border-border rounded-lg bg-background"
+                />
+                <button
+                  onClick={handleAddBarbeiro}
+                  className="bg-primary text-primary-foreground py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition flex items-center gap-2"
+                >
+                  <Plus className="w-5 h-5" /> Salvar
+                </button>
+              </div>
+
+              <h2 className="text-2xl font-semibold mt-6 mb-4">
+                Barbeiros Cadastrados
+              </h2>
+              <ul className="space-y-2">
+                {barbeiros.map((b) => (
+                  <li
+                    key={b.id}
+                    className="bg-muted p-3 rounded-lg flex justify-between items-center"
+                  >
+                    {editingBarbeiroId === b.id ? (
+                      <div className="flex gap-2 flex-1">
+                        <input
+                          type="text"
+                          value={editingBarbeiroName}
+                          onChange={(e) =>
+                            setEditingBarbeiroName(e.target.value)
+                          }
+                          className="flex-1 p-2 border border-border rounded bg-background"
+                        />
+                        <button
+                          onClick={handleUpdateBarbeiro}
+                          className="bg-primary text-primary-foreground p-2 rounded hover:shadow-lg transition"
+                        >
+                          <Save className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setEditingBarbeiroId(null)}
+                          className="bg-muted-foreground text-background p-2 rounded hover:shadow-lg transition"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span>{b.name}</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingBarbeiroId(b.id);
+                              setEditingBarbeiroName(b.name);
+                            }}
+                            className="bg-primary text-primary-foreground p-2 rounded hover:shadow-lg transition"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBarbeiro(b.id)}
+                            className="bg-destructive text-destructive-foreground p-2 rounded hover:shadow-lg transition"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Informações Barbearia */}
           {activeTab === "info" && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold mb-4">Informações da Barbearia</h2>
-
+              <h2 className="text-2xl font-semibold mb-4">
+                Informações da Barbearia
+              </h2>
               {editingInfo ? (
                 <div className="bg-muted p-6 rounded-lg space-y-4">
-                  <div>
-                    <label className="block font-semibold mb-2">Nome da Barbearia</label>
-                    <input
-                      type="text"
-                      value={barbershopInfo.name}
-                      onChange={(e) => setBarbershopInfo({ ...barbershopInfo, name: e.target.value })}
-                      className="w-full p-3 border border-border rounded-lg bg-background"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-2">Telefone</label>
-                    <input
-                      type="tel"
-                      value={barbershopInfo.phone}
-                      onChange={(e) => setBarbershopInfo({ ...barbershopInfo, phone: e.target.value })}
-                      className="w-full p-3 border border-border rounded-lg bg-background"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-2">Endereço</label>
-                    <input
-                      type="text"
-                      value={barbershopInfo.address}
-                      onChange={(e) => setBarbershopInfo({ ...barbershopInfo, address: e.target.value })}
-                      className="w-full p-3 border border-border rounded-lg bg-background"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={barbershopInfo.email}
-                      onChange={(e) => setBarbershopInfo({ ...barbershopInfo, email: e.target.value })}
-                      className="w-full p-3 border border-border rounded-lg bg-background"
-                    />
-                  </div>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleUpdateInfo}
-                      className="flex-1 bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
-                    >
-                      <Save className="w-5 h-5" />
-                      Salvar
-                    </button>
-                    <button
-                      onClick={() => setEditingInfo(false)}
-                      className="flex-1 border border-primary text-primary py-3 rounded-lg font-semibold hover:bg-primary hover:text-primary-foreground transition"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={barbershopInfo.name}
+                    onChange={(e) =>
+                      setBarbershopInfo({
+                        ...barbershopInfo,
+                        name: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 border border-border rounded-lg bg-background"
+                    placeholder="Nome"
+                  />
+                  <input
+                    type="tel"
+                    value={barbershopInfo.phone}
+                    onChange={(e) =>
+                      setBarbershopInfo({
+                        ...barbershopInfo,
+                        phone: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 border border-border rounded-lg bg-background"
+                    placeholder="Telefone"
+                  />
+                  <input
+                    type="text"
+                    value={barbershopInfo.address}
+                    onChange={(e) =>
+                      setBarbershopInfo({
+                        ...barbershopInfo,
+                        address: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 border border-border rounded-lg bg-background"
+                    placeholder="Endereço"
+                  />
+                  <input
+                    type="email"
+                    value={barbershopInfo.email}
+                    onChange={(e) =>
+                      setBarbershopInfo({
+                        ...barbershopInfo,
+                        email: e.target.value,
+                      })
+                    }
+                    className="w-full p-3 border border-border rounded-lg bg-background"
+                    placeholder="Email"
+                  />
+                  <button
+                    onClick={handleUpdateInfo}
+                    className="bg-primary text-primary-foreground py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition"
+                  >
+                    Salvar
+                  </button>
                 </div>
               ) : (
-                <div className="bg-muted p-6 rounded-lg space-y-4">
-                  <div>
-                    <label className="block text-sm text-muted-foreground">Nome</label>
-                    <p className="text-lg font-semibold">{barbershopInfo.name}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted-foreground">Telefone</label>
-                    <p className="text-lg font-semibold">{barbershopInfo.phone}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted-foreground">Endereço</label>
-                    <p className="text-lg font-semibold">{barbershopInfo.address}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted-foreground">Email</label>
-                    <p className="text-lg font-semibold">{barbershopInfo.email}</p>
-                  </div>
+                <div className="bg-muted p-6 rounded-lg space-y-2">
+                  <p>
+                    <strong>Nome:</strong> {barbershopInfo.name}
+                  </p>
+                  <p>
+                    <strong>Telefone:</strong> {barbershopInfo.phone}
+                  </p>
+                  <p>
+                    <strong>Endereço:</strong> {barbershopInfo.address}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {barbershopInfo.email}
+                  </p>
                   <button
                     onClick={() => setEditingInfo(true)}
-                    className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
+                    className="bg-primary text-primary-foreground py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition"
                   >
-                    <Edit2 className="w-5 h-5" />
-                    Editar Informações
+                    Editar
                   </button>
                 </div>
               )}
@@ -289,5 +613,5 @@ export default function AdminPage() {
 
       <Footer />
     </div>
-  )
+  );
 }
